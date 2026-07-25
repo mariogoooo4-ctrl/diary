@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Daily Diary - Геймифициран Дневник</title>
+    <!-- Google Fonts: Outfit (modern sans) & Space Grotesk / JetBrains Mono (coding/gaming look) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for gaming icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Canvas for Confetti & Particles -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-gamepad pulse-icon"></i>
+                <h1>LifeQuest <span>RPG</span></h1>
+            </div>
+            <div class="header-actions">
+                <button id="sound-toggle" class="btn btn-icon" title="Включи/Изключи звук">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+                <button id="reset-data" class="btn btn-outline btn-sm btn-danger" title="Нулиране на целия прогрес">
+                    <i class="fa-solid fa-trash-can"></i> Нулиране
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="app-main-grid">
+            <!-- Sidebar: Character Profile -->
+            <section class="profile-card glass-panel">
+                <div class="character-header">
+                    <div class="avatar-container">
+                        <img id="char-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231a152c'/><circle cx='50' cy='40' r='20' fill='%23bd93f9'/><path d='M20,90 Q50,50 80,90 Z' fill='%238be9fd'/></svg>" alt="Avatar">
+                        <button id="change-avatar" class="btn-change-avatar" title="Промени аватар"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                    <div class="character-info">
+                        <h2 id="char-name">Герой</h2>
+                        <div class="level-badge">НИВО <span id="char-level">1</span></div>
+                    </div>
+                </div>
+
+                <!-- XP Bar -->
+                <div class="xp-section">
+                    <div class="xp-labels">
+                        <span>XP (Опит)</span>
+                        <span id="xp-text">0 / 100</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="xp-fill" class="progress-bar-fill xp-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Stat Counters (Gold & Streak) -->
+                <div class="stats-counters">
+                    <div class="counter-item gold-counter" title="Злато за награди">
+                        <i class="fa-solid fa-coins gold-icon"></i>
+                        <div class="counter-val">
+                            <span id="char-gold">50</span>
+                            <small>Gold</small>
+                        </div>
+                    </div>
+                    <div class="counter-item streak-counter" id="streak-tooltip" title="Поредни активни дни">
+                        <i class="fa-solid fa-fire fire-icon"></i>
+                        <div class="counter-val">
+                            <span id="char-streak">0</span>
+                            <small>Серия</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attributes / Stats -->
+                <div class="attributes-section">
+                    <h3>Характеристики</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card" data-stat="strength" title="Спорт, тренировки, здраве">
+                            <div class="stat-icon-wrapper strength"><i class="fa-solid fa-dumbbell"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-label">Сила (STR)</span>
+                                <span id="stat-strength" class="stat-value">10.0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-stat="intellect" title="Четене, учене, кодене, проекти">
+                            <div class="stat-icon-wrapper intellect"><i class="fa-solid fa-brain"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-label">Интелект (INT)</span>
+                                <span id="stat-intellect" class="stat-value">10.0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-stat="charisma" title="Социални контакти, семейство, приятели">
+                            <div class="stat-icon-wrapper charisma"><i class="fa-solid fa-comments"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-label">Харизма (CHA)</span>
+                                <span id="stat-charisma" class="stat-value">10.0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card" data-stat="willpower" title="Навици, почистване, дисциплина, липса на вредни навици">
+                            <div class="stat-icon-wrapper willpower"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-label">Воля (WIL)</span>
+                                <span id="stat-willpower" class="stat-value">10.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Contents: Quests, Shop, achievements -->
+            <div class="dashboard-content">
+                <!-- Navigation Tabs -->
+                <nav class="dash-tabs">
+                    <button class="tab-btn active" data-tab="quests"><i class="fa-solid fa-scroll"></i> Мисии (Задачи)</button>
+                    <button class="tab-btn" data-tab="shop"><i class="fa-solid fa-store"></i> Магазин</button>
+                    <button class="tab-btn" data-tab="achievements"><i class="fa-solid fa-trophy"></i> Постижения</button>
+                    <button class="tab-btn" data-tab="history"><i class="fa-solid fa-clock-rotate-left"></i> История</button>
+                </nav>
+
+                <!-- TAB: Quests -->
+                <section id="tab-quests" class="tab-panel active">
+                    <div class="panel-header">
+                        <h2>Дневник на мисиите</h2>
+                        <button id="btn-toggle-add-quest" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-plus"></i> Нова мисия
+                        </button>
+                    </div>
+
+                    <!-- Task Lists Selector -->
+                    <div class="list-selector-wrapper">
+                        <span class="section-micro-label"><i class="fa-solid fa-folder-open"></i> ТЕКУЩ СПИСЪК</span>
+                        <div class="list-tabs-container">
+                            <div id="list-tabs" class="list-tabs">
+                                <!-- Lists tabs will be injected here by app.js -->
+                            </div>
+                            <button id="btn-add-list" class="btn btn-icon btn-sm btn-add-list" title="Създай нов списък">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Add Quest Form (Collapsible) -->
+                    <form id="add-quest-form" class="quest-form glass-panel hidden">
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label for="quest-text">Какво искаш да постигнеш?</label>
+                                <input type="text" id="quest-text" placeholder="Напр. 30 мин четене на книга, 5км бягане..." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="quest-type">Тип</label>
+                                <select id="quest-type">
+                                    <option value="daily">Ежедневна (Daily)</option>
+                                    <option value="quick">Еднократна (Quick)</option>
+                                    <option value="epic">Епична цел (Epic)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="quest-category">Категория (Статистика)</label>
+                                <select id="quest-category">
+                                    <option value="intellect">📚 Интелект (INT)</option>
+                                    <option value="strength">💪 Сила (STR)</option>
+                                    <option value="charisma">💬 Харизма (CHA)</option>
+                                    <option value="willpower">🛡️ Воля (WIL)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="quest-difficulty">Трудност (Награда)</label>
+                                <select id="quest-difficulty">
+                                    <option value="easy">Лесна (+1 XP / +1 Злато)</option>
+                                    <option value="medium" selected>Средна (+3 XP / +3 Злато)</option>
+                                    <option value="hard">Трудна (+8 XP / +8 Злато)</option>
+                                    <option value="epic">Епична (+20 XP / +20 Злато)</option>
+                                </select>
+                            </div>
+                            <div class="form-group align-end">
+                                <button type="submit" class="btn btn-success btn-full">
+                                    <i class="fa-solid fa-feather-pointed"></i> Запиши мисията
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Quest Filters -->
+                    <div class="quest-filters">
+                        <button class="filter-btn active" data-filter="all">Всички</button>
+                        <button class="filter-btn" data-filter="daily">Ежедневни</button>
+                        <button class="filter-btn" data-filter="quick">Еднократни</button>
+                        <button class="filter-btn" data-filter="epic">Епични</button>
+                    </div>
+
+                    <!-- Quests Lists -->
+                    <div class="quests-container">
+                        <div id="empty-quests" class="empty-state hidden">
+                            <i class="fa-solid fa-square-circle-plus"></i>
+                            <p>Няма активни мисии в момента. Създай нова от бутона по-горе!</p>
+                        </div>
+                        <ul id="quests-list" class="quests-list">
+                            <!-- Quests items will be injected here by app.js -->
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- TAB: Shop -->
+                <section id="tab-shop" class="tab-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Магазин за награди</h2>
+                            <p class="panel-desc">Харчи трудно спечеленото злато за реални удоволствия в реалния живот!</p>
+                        </div>
+                        <button id="btn-toggle-add-reward" class="btn btn-gold btn-sm">
+                            <i class="fa-solid fa-plus"></i> Създай награда
+                        </button>
+                    </div>
+
+                    <!-- Add Reward Form (Collapsible) -->
+                    <form id="add-reward-form" class="quest-form glass-panel hidden">
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label for="reward-text">Име на наградата</label>
+                                <input type="text" id="reward-text" placeholder="Напр. 1 час игра на Playstation, Снакс..." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reward-cost">Цена (Злато)</label>
+                                <input type="number" id="reward-cost" min="1" value="15" required>
+                            </div>
+                            <div class="form-group align-end">
+                                <button type="submit" class="btn btn-gold btn-full">
+                                    <i class="fa-solid fa-store"></i> Добави награда
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Shop Items Grid -->
+                    <div id="shop-grid" class="shop-grid">
+                        <!-- Shop items injected here by app.js -->
+                    </div>
+                </section>
+
+                <!-- TAB: Achievements -->
+                <section id="tab-achievements" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Зала на славата (Постижения)</h2>
+                        <p class="panel-desc">Отключи специални титли и значки, докато подобряваш живота си.</p>
+                    </div>
+                    <div id="achievements-grid" class="achievements-grid">
+                        <!-- Achievements injected here by app.js -->
+                    </div>
+                </section>
+
+                <!-- TAB: History -->
+                <section id="tab-history" class="tab-panel">
+                    <div class="panel-header">
+                        <h2>Логове и История</h2>
+                        <button id="clear-history" class="btn btn-outline btn-sm">Изчисти историята</button>
+                    </div>
+                    <div class="history-container">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата/Час</th>
+                                    <th>Събитие</th>
+                                    <th>Категория</th>
+                                    <th>Награда</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-list">
+                                <!-- History injected here by app.js -->
+                            </tbody>
+                        </table>
+                        <div id="empty-history" class="empty-state hidden">
+                            <i class="fa-solid fa-history"></i>
+                            <p>Все още нямаш записана история на завършени цели.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Level Up Modal overlay -->
+    <div id="levelup-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel glow-purple">
+            <div class="levelup-header">
+                <i class="fa-solid fa-crown levelup-crown"></i>
+                <h2>LEVEL UP!</h2>
+                <p>Постигна ново ниво в реалния живот!</p>
+            </div>
+            <div class="modal-body">
+                <div class="level-comparison">
+                    <div class="level-old" id="modal-old-level">1</div>
+                    <i class="fa-solid fa-angles-right level-arrow"></i>
+                    <div class="level-new" id="modal-new-level">2</div>
+                </div>
+                <p class="levelup-congrats">Характеристиките ти се увеличиха и получи бонус <span class="gold-text"><i class="fa-solid fa-coins"></i> 10 Злато</span>!</p>
+            </div>
+            <button id="btn-close-levelup" class="btn btn-primary btn-lg">Продължи приключението</button>
+        </div>
+    </div>
+
+    <!-- Avatar Selection Modal -->
+    <div id="avatar-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <h2>Избери своя аватар</h2>
+            <div class="avatar-options" id="avatar-options-grid">
+                <!-- Avatars injected dynamically by app.js -->
+            </div>
+            <button id="btn-close-avatar" class="btn btn-outline">Отказ</button>
+        </div>
+    </div>
+
+    <!-- Application Javascript -->
+    <script src="app.js"></script>
+</body>
+</html>
