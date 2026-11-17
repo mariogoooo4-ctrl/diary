@@ -1,0 +1,111 @@
+name: FolderSkins
+
+# Builds the FolderSkins desktop app (Windows + macOS installers) and publishes
+# the browser preview to GitHub Pages.
+on:
+  push:
+    branches: [main, claude/desktop-folder-skins-app-yccmy2]
+    paths: ["folder-skins/**", ".github/workflows/folder-skins.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: folder-skins-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: folder-skins
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: folder-skins/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Install Tauri system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev libayatana-appindicator3-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: folder-skins/src-tauri
+      - name: Rust tests
+        working-directory: folder-skins/src-tauri
+        run: cargo test
+
+  desktop:
+    name: Installer (${{ matrix.name }})
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            args: ""
+          - name: macOS (Apple Silicon)
+            os: macos-latest
+            args: "--target aarch64-apple-darwin"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: folder-skins/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: folder-skins/src-tauri
+      - run: npm ci
+      - name: Build installer
+        run: npx tauri build ${{ matrix.args }}
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: FolderSkins-${{ matrix.os == 'windows-latest' && 'Windows' || 'macOS' }}
+          if-no-files-found: error
+          path: |
+            folder-skins/src-tauri/target/**/release/bundle/msi/*.msi
+            folder-skins/src-tauri/target/**/release/bundle/nsis/*.exe
+            folder-skins/src-tauri/target/**/release/bundle/dmg/*.dmg
+
+  web:
+    name: Web preview (GitHub Pages)
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: folder-skins/package-lock.json
+      - run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: folder-skins/dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
