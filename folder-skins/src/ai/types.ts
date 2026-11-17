@@ -1,8 +1,15 @@
 export interface GenerateRequest {
-  /** Fully-built prompt (see buildPrompt). */
+  /** Fully-built prompt (see recipes.ts). */
   prompt: string;
   apiKey: string;
   model: string;
+  /** Number of variations to return (1–4). */
+  count: number;
+  /**
+   * Optional reference image (PNG of a plain folder on white). When given,
+   * providers run image-to-image so the result keeps the folder silhouette.
+   */
+  reference?: Blob;
   signal?: AbortSignal;
 }
 
@@ -20,10 +27,10 @@ export interface ImageProvider {
   modelHint: string;
   /** Where users obtain an API key. */
   keyUrl: string;
-  /** True if the provider can return transparent backgrounds (best for badge/full fits). */
+  /** True if the provider can return transparent backgrounds. Otherwise the UI cuts out the white background. */
   supportsTransparency: boolean;
-  /** Returns a data:image/png;base64 URL. */
-  generate(req: GenerateRequest): Promise<string>;
+  /** Returns data:image/png;base64 URLs, one per variation. */
+  generate(req: GenerateRequest): Promise<string[]>;
 }
 
 export class ProviderError extends Error {

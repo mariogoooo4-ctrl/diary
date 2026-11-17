@@ -96,6 +96,8 @@ export function EditorView() {
           </div>
         </Section>
 
+        <AiPanel draft={draft} fit={fit} onUse={(dataUrl, f) => updateDraft({ artwork: { dataUrl, fit: f } })} />
+
         <Section title={t("editor.fill")}>
           <Segmented<FillType>
             value={draft.fill.type}
@@ -185,8 +187,6 @@ export function EditorView() {
             </Field>
           )}
         </Section>
-
-        <AiPanel fit={fit} onImage={(dataUrl) => updateDraft({ artwork: { dataUrl, fit } })} />
 
         <Section title={t("editor.effects")}>
           <div className="row wrap">

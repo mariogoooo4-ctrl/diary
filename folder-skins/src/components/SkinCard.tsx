@@ -5,7 +5,7 @@ import { errMsg, useApp } from "../state/store";
 import { t } from "../i18n";
 import { SkinPreview } from "./SkinPreview";
 
-export function SkinCard({ skin, own }: { skin: Skin; own: boolean }) {
+export function SkinCard({ skin, own, size = 88 }: { skin: Skin; own: boolean; size?: number }) {
   const { targetFolder, platform, applySkin, openEditor, deleteUserSkin, notify, applied } = useApp();
   const canApply = !!targetFolder && platform.supported;
   const isCurrent = applied.some((a) => a.folder === targetFolder && a.skinId === skin.id);
@@ -32,7 +32,7 @@ export function SkinCard({ skin, own }: { skin: Skin; own: boolean }) {
         title={canApply ? `${t("card.apply")} → ${targetFolder}` : t("card.applyHint")}
         onClick={() => targetFolder && applySkin(skin, targetFolder)}
       >
-        <SkinPreview skin={skin} size={88} />
+        <SkinPreview skin={skin} size={size} />
       </button>
       <div className="skin-card-name" title={skin.name}>{skin.name}</div>
       <div className="skin-card-actions">

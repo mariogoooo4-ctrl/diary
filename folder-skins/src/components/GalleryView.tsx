@@ -10,6 +10,7 @@ export function GalleryView() {
   const packs = useMemo(() => allPacks({ userSkins, importedPacks }), [userSkins, importedPacks]);
   const [packFilter, setPackFilter] = useState<string>("all");
   const [query, setQuery] = useState("");
+  const [zoom, setZoom] = useState(96);
 
   const sections = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -35,8 +36,24 @@ export function GalleryView() {
           ))}
         </div>
         <input className="search" placeholder={t("gallery.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
+        <label className="zoom" title={t("gallery.zoom")}>
+          <span>▫</span>
+          <input type="range" min={64} max={160} step={8} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
+          <span>◻</span>
+        </label>
         <button className="btn primary" onClick={() => openEditor()}>＋ {t("gallery.new")}</button>
       </div>
+
+      {userSkins.length === 0 && !query && (packFilter === "all" || packFilter === USER_PACK_ID) && (
+        <div className="cta">
+          <div className="cta-art">🍕📦🐠</div>
+          <div className="cta-text">
+            <strong>{t("gallery.ctaTitle")}</strong>
+            <span className="muted">{t("gallery.ctaBody")}</span>
+          </div>
+          <button className="btn primary" onClick={() => openEditor()}>✨ {t("gallery.ctaButton")}</button>
+        </div>
+      )}
 
       {sections.length === 0 && <div className="empty">{t("gallery.empty")}</div>}
 
@@ -52,8 +69,8 @@ export function GalleryView() {
               <button className="btn link" onClick={() => openEditor()}>{t("gallery.createFirst")}</button>
             </div>
           ) : (
-            <div className="grid">
-              {skins.map((s) => <SkinCard key={s.id} skin={s} own={pack.id === USER_PACK_ID} />)}
+            <div className="grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${zoom + 52}px, 1fr))` }}>
+              {skins.map((s) => <SkinCard key={s.id} skin={s} own={pack.id === USER_PACK_ID} size={zoom} />)}
             </div>
           )}
         </section>

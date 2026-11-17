@@ -10,7 +10,8 @@
 │   presets.ts     built-in packs (data)                           │
 │   packs.ts       .fskin pack format                              │
 │   rasterize.ts   SVG → PNG (canvas)                              │
-│ ai/              ImageProvider interface + OpenAI/Stability      │
+│ ai/              ImageProvider + OpenAI/Stability, recipes.ts    │
+│ core/cutout.ts   white-background removal (pure, tested)         │
 │ i18n/            t() + locale dictionaries                       │
 │ platform/        api.ts (only file that calls Tauri) · storage.ts│
 └───────────────────────────── IPC ───────────────────────────────┘
@@ -56,6 +57,7 @@ Invalid stored entries are dropped on load. A bad file therefore can't crash the
 |---|---|
 | Add a folder silhouette | Add the name to `SHAPES` (skin.ts) and a `GEOMETRY` entry (render.ts). |
 | Add a built-in theme pack | Append a `pack(...)` to `BUILTIN_PACKS` (presets.ts). Keep ids stable. |
+| Add an AI vibe or idea | Append to `VIBES` / `OBJECT_IDEAS` in `ai/recipes.ts`. |
 | Add an AI provider | Implement `ImageProvider` (ai/types.ts), register it in `PROVIDERS` (ai/index.ts), and allow its host in `src-tauri/capabilities/default.json`. |
 | Add a language | Copy `i18n/locales/en.ts`, translate it, and register it in `i18n/index.ts`. Missing keys fall back to English. |
 | Support Linux | Add `platform/linux.rs` with `apply`/`revert` (e.g. `gio set <dir> metadata::custom-icon`, KDE `.directory`). Wire it up in `platform/mod.rs`. |

@@ -4,7 +4,8 @@ A desktop app for **Windows and macOS** that changes how your folders look.
 
 - **Different looks.** 60+ built-in skins in 9 packs: Essentials, Gradients, Badges, Neon, Pastel, Retro, Dark Glass, Nature and Shapes. There are 5 folder silhouettes (classic, rounded, flat, 3D, outline).
 - **Easy to change.** Choose a folder (or drag one onto the window), click a skin, and the folder changes. *Restore original* puts the folder back the way it was.
-- **Make your own skins.** The designer has shape, solid/gradient fills, emoji or letter badges, your own image and effects (shadow, gloss, glow). **AI generation** turns a text prompt into artwork using your own OpenAI or Stability API key.
+- **Make your own skins.** The designer has shape, solid/gradient fills, emoji or letter badges, your own image and effects (shadow, gloss, glow).
+- **Object folders (AI).** Turn a folder *into* something: a greasy pizza box, a rusty safe, an aquarium. Pick a vibe (Hyper-real, Grocery, Junk food, Industrial, Retro tech, Organic, Toy, Gross) or press 🎲 for an idea, then pick your favourite of up to 4 variations. Your folder shape is sent as a reference image, so results keep a folder silhouette. White backgrounds are cut out automatically. Uses your own OpenAI or Stability API key.
 - **Share skins.** Export your skins as a `.fskin` pack, and import packs other people made.
 
 Built with **Tauri 2** (Rust) and **React + TypeScript**. Installers are about 10 MB.
@@ -40,7 +41,17 @@ cd src-tauri && cargo test       # desktop.ini editing, .ico encoding
 
 ## AI generation
 
-Open **Settings → AI image generation**, pick a provider and paste your API key. Then use **Create → Generate with AI**. The generated image is attached to the skin as a badge, as a cover over the folder front, or as the whole icon.
+Open **Settings → AI image generation**, pick a provider and paste your API key. Then use **Create → Generate with AI**. There are two modes:
+
+- **Object folder:** the whole icon becomes a photoreal object. The prompt is built in three parts:
+  1. *keep this exact folder shape*
+  2. *the folder is X, built out of it, not pasted inside*
+  3. *material and realism details from the chosen vibe*
+
+  It ends with "no text, no logos, no branding". With *Keep my folder shape* on, the current shape is rendered on white and sent for image-to-image generation. OpenAI uses `/v1/images/edits`; Stability uses the Structure control endpoint.
+- **Artwork on folder:** generates a picture placed on your designed folder as a badge, a cover or the whole icon.
+
+Prompts live in `src/ai/recipes.ts`, so adding a vibe or a starter idea means editing one list.
 
 Keys are stored only on your computer (in the app data folder, `folderskins.json`). They are sent only to the provider you selected.
 
